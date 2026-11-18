@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+outputs/
+experiments/results*/
+experiments/demos/
+experiments/train_logs/
+experiments/scalars_out/
+experiments/ral_out/
+experiments/grid/
+experiments/figs/
+*.pt
+*.pth

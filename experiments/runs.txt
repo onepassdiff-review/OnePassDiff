@@ -1,0 +1,44 @@
+# variant seed   (one training run per line; launch_train.sh reads this file)
+# --- main controllers: 5 seeds each ---
+full 1
+full 2
+full 3
+full 4
+full 5
+ppo_only 1
+ppo_only 2
+ppo_only 3
+ppo_only 4
+ppo_only 5
+ppo_mlp 1
+ppo_mlp 2
+ppo_mlp 3
+ppo_mlp 4
+ppo_mlp 5
+# eps-prediction ablation dropped: with PPO at t=0 an eps-predicting net has no single-pass action
+# --- ablations: 3 seeds each (predictor heads, ES, eta-coupling, x_N=0 are evaluation modes and need no runs) ---
+abl_self_distill 1
+abl_self_distill 2
+abl_self_distill 3
+abl_no_enc_grad 1
+abl_no_enc_grad 2
+abl_no_enc_grad 3
+abl_no_terrain_latent 1
+abl_no_terrain_latent 2
+abl_no_terrain_latent 3
+abl_no_stair_data 1
+abl_no_stair_data 2
+abl_no_stair_data 3
+abl_linear_schedule 1
+abl_linear_schedule 2
+abl_linear_schedule 3
+abl_no_resblocks 1
+abl_no_resblocks 2
+abl_no_resblocks 3
+abl_no_joint_loss 1
+abl_no_joint_loss 2
+abl_no_joint_loss 3
+# --- PPO-MLP + joint-limit loss: 3 seeds ---
+ppo_mlp_joint 1
+ppo_mlp_joint 2
+ppo_mlp_joint 3

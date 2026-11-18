@@ -1,0 +1,29 @@
+# PPO-MLP baseline: Gaussian MLP actor with about the same number of
+# parameters as the OnePassDiff actor (716,773 incl. the step predictor; [784,512,256] gives
+# 713,012), and the SAME asymmetric critic as BipedPPODiffusion / BipedPPOOnePass.
+# Observations, rewards, terrains, curriculum, PPO settings and budget come from envs/exp_onepass.sh.
+
+params:
+  network:
+    name: actor_critic
+    separate: False
+    mlp:
+      units: [784, 512, 256]
+      activation: elu
+      d2rl: False
+      initializer:
+        name: default
+      regularizer:
+        name: None
+
+  config:
+    save_frequency: 250
+    central_value_config:
+      network:
+        mlp:
+          units: [512, 256, 128]   # identical to the diffusion runs (BipedPPOAsymm uses [1024,512,256])
+    name: ${resolve_default:BipedMLPMatched,${....experiment}}
+
+defaults:
+  - BipedPPOAsymm
+  - _self_

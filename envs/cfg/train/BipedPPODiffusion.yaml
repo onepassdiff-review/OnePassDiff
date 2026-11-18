@@ -1,0 +1,69 @@
+# Training configuration for Diffusion-based Policy
+# Architecture matches BiRoDiff (arxiv 2407.05424):
+#   Encoder:  obs → 256 → 128 → state_latent(128D) + terrain_latent(16D)
+#   Denoiser: [state(128)+terrain(16)+noise(action_dim)+time(128)] → 256×3blocks → action
+#   Time embedding: 128D sinusoidal + learnable projection (paper: 128D)
+
+params:
+  network:
+    name: diffusion_actor_critic
+    separate: False   # combined forward() returns (mu, sigma, value, None)
+
+    # Diffusion-specific parameters (read by DiffusionActorCriticBuilder.Network)
+    diffusion:
+      state_latent_dim: 128       # up from 64 — wider bottleneck
+      terrain_latent_dim: 16      # up from 4 — richer terrain encoding
+      num_ddim_steps: 10          # DDIM steps at inference
+      min_ddim_steps: 5           # minimum adaptive steps
+      training_noise_scale: 0.0   # no training noise (clean PPO signal)
+
+    space:
+      continuous:
+        mu_activation: None
+        sigma_activation: None
+        mu_init:
+          name: default
+        sigma_init:
+          name: const_initializer
+          val: 0.0                # initial log_std → std=1.0, matches baseline exploration
+        fixed_sigma: True
+
+    # Critic MLP — same width as baseline for fair value estimation
+    mlp:
+      units: [512, 256, 128]
+      activation: elu
+      d2rl: False
+      initializer:
+        name: default
+      regularizer:
+        name: None
+
+  config:
+    central_value_config:
+      minibatch_size: ${..minibatch_size}
+      mini_epochs: ${..mini_epochs}
+      learning_rate: ${..learning_rate}
+      lr_schedule: ${..lr_schedule}
+      schedule_type: standard
+      kl_threshold: ${..kl_threshold}
+      clip_value: True
+      normalize_input: True
+      truncate_grads: ${..truncate_grads}
+
+      network:
+        name: actor_critic
+        central_value: True
+        mlp:
+          units: [512, 256, 128]
+          activation: elu
+          d2rl: False
+          initializer:
+            name: default
+          regularizer:
+            name: None
+
+    name: ${resolve_default:BipedDiffusion,${....experiment}}
+
+defaults:
+  - LeggedTerrainPPO
+  - _self_

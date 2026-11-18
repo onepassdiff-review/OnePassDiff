@@ -1,0 +1,48 @@
+# OnePassDiff: same network as BipedPPODiffusion, plus
+#   M1 advantage-weighted denoising loss, M2 trained step predictor, M3 joint-limit loss on targets,
+#   and the log-std fix (see envs/common/diffusion_policy.py and envs/common/onepass_agent.py).
+# Ablations are Hydra overrides of the keys below (see envs/exp_onepass.sh).
+
+params:
+  algo:
+    name: a2c_continuous_onepass
+
+  network:
+    diffusion:
+      logstd_fix: True            # rl_games expects log-std (diffusion_policy.py)
+      T: 100                      # diffusion steps of the fixed cosine schedule (training + DDIM)
+      schedule: cosine            # 'linear' for the schedule ablation
+      tnp_extra_heads: True       # 'priv' and 'untrained' step-predictor heads for the ablations
+      no_resblocks: False         # ablation: same layers without skip connections
+      zero_terrain_latent: False  # ablation: z_terrain replaced by zeros
+
+  config:
+    save_frequency: 250           # model every 250 iterations (learning curves on the fixed suite)
+    onepass:
+      # M1: advantage-weighted denoising loss
+      enable_dn: True
+      lambda_dn: 0.1              # fixed in single-seed pilot runs
+      dn_beta: 1.0
+      dn_wmax: 20.0
+      dn_target: executed         # 'self_distill' for that ablation
+      dn_detach_encoder: False
+      # M3: joint-limit loss on predicted joint targets q0 + k_a * a_hat
+      enable_joint: True
+      lambda_joint: 0.1           # fixed in single-seed pilot runs
+      # M2: self-supervised step predictor (own Adam optimizer, after every PPO update)
+      enable_tnp: True
+      tnp_lr: 1.0e-3
+      tnp_every: 1
+      tnp_batch: 4096
+      tnp_steps: 8                # step-predictor Adam steps per PPO iteration, each on a fresh minibatch
+      tnp_kappa_q: 0.95
+      tnp_kappa_len: 50
+      n_min: 5
+      n_max: 10
+      tnp_priv: True
+
+    name: ${resolve_default:BipedOnePass,${....experiment}}
+
+defaults:
+  - BipedPPODiffusion
+  - _self_
